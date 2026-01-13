@@ -3,14 +3,14 @@ import google.generativeai as genai
 from PyPDF2 import PdfReader
 
 # --- 앱 설정 ---
-st.set_page_config(page_title="Psy-Interpreter Pro", layout="wide")
+st.set_page_config(page_title="Psy-Interpreter Pro", layout="wide", page_icon="🧠")
 
 # --- 사이드바 ---
 with st.sidebar:
-    st.header("⚙️ 설정")
-    # API 키 입력 시 앞뒤 공백을 자동으로 제거합니다.
-    raw_key = st.text_input("Gemini API Key를 입력하세요", type="password")
-    user_api_key = raw_key.strip() if raw_key else None
+    st.header("⚙️ 설정 및 업로드")
+    # API 키 입력 시 앞뒤 공백 제거
+    raw_api_key = st.text_input("Gemini API Key를 입력하세요", type="password")
+    user_api_key = raw_api_key.strip() if raw_api_key else None
     
     uploaded_file = st.file_uploader("파일 업로드 (PDF, 이미지)", type=['pdf', 'png', 'jpg', 'jpeg'])
     mode = st.radio("모드", ["🎓 교수님 브리핑용", "📖 교과서 해설용", "✍️ 논문 결과 작성용"])
@@ -19,14 +19,13 @@ with st.sidebar:
 st.title("🧠 Psy-Interpreter")
 
 if not user_api_key:
-    st.warning("👈 왼쪽 사이드바에 Gemini API Key를 입력해주세요.")
+    st.warning("👈 왼쪽 사이드바에 API Key를 입력해주세요.")
 elif uploaded_file:
     # API 설정
     genai.configure(api_key=user_api_key)
     
-    # [중요] 모델 이름을 가장 단순하게 설정하여 404 에러를 방지합니다.
-    # 텍스트 분석용 모델
-    model = genai.GenerativeModel('gemini-1.5-flash-latest') 
+    # [중요] 404 에러 방지를 위한 표준 모델명 설정
+    model = genai.GenerativeModel('gemini-1.5-flash') 
     
     with st.spinner('박재연 소장님 논문을 분석 중입니다...'):
         try:
@@ -38,12 +37,13 @@ elif uploaded_file:
                     text += reader.pages[i].extract_text()
                 
                 # 분석 요청
-                response = model.generate_content(f"당신은 심리학 전문가입니다. 다음 내용을 [{mode}] 스타일로 분석해줘:\n\n{text}")
+                prompt = f"당신은 심리학 통계 전문가입니다. 다음 논문을 [{mode}] 스타일로 분석해줘:\n\n{text}"
+                response = model.generate_content(prompt)
             else:
                 # 이미지 분석
                 img_data = uploaded_file.getvalue()
                 response = model.generate_content([
-                    f"이 이미지를 [{mode}] 스타일로 해석해줘.",
+                    f"이 통계 이미지를 [{mode}] 스타일로 해석해줘.",
                     {"mime_type": uploaded_file.type, "data": img_data}
                 ])
             
@@ -52,11 +52,5 @@ elif uploaded_file:
             st.markdown(response.text)
             
         except Exception as e:
-            # 여전히 에러가 날 경우를 대비한 대체 모델 시도
-            try:
-                alt_model = genai.GenerativeModel('gemini-1.5-flash')
-                # (재시도 로직...)
-                st.error(f"기본 모델 오류로 대체 모델을 시도 중입니다... ({e})")
-            except:
-                st.error(f"최종 오류 발생: {e}")
-                st.info("Tip: 구글 AI 스튜디오에서 새로운 API 키를 발급받아보시는 것을 권장합니다.")
+            st.error(f"오류가 발생했습니다: {e}")
+            st.info("Tip: 404 에러가 지속되면 Google AI Studio에서 'New Project'로 API 키를 새로 발급받아보세요.")
