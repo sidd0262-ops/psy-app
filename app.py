@@ -20,7 +20,7 @@ if not user_api_key:
     st.warning("👈 왼쪽 사이드바에 API Key를 입력해주세요.")
 elif uploaded_file:
     genai.configure(api_key=user_api_key)
-    model = genai.GenerativeModel('models/gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-flash')
     with st.spinner('분석 중...'):
         try:
             if uploaded_file.type == "application/pdf":
