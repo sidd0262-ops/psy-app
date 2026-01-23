@@ -45,3 +45,4 @@ elif uploaded_file:
         except Exception as e:
             st.error(f"오류가 발생했습니다: {e}")
             st.info("Tip: 404 에러 시, Google AI Studio에서 'Create API key in new project'로 새 키를 발급받으세요.")
+# 업데이트 확인용 강제 저장
